@@ -1,0 +1,22 @@
+---
+alwaysApply: true
+---
+
+Before creating:
+
+- class
+- interface
+- utility
+- DTO
+- mapper
+- exception
+- repository
+- configuration
+- dependency
+
+Search the repository first.
+
+If an equivalent implementation exists,
+reuse or extend it.
+
+Do not create another one.
