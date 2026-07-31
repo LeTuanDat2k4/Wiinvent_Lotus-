@@ -5,6 +5,9 @@ import com.Wiinvent.Lotus.core.security.SecurityUtils;
 import com.Wiinvent.Lotus.domain.checkin.dto.CheckInResponse;
 import com.Wiinvent.Lotus.domain.checkin.dto.CheckInStatusResponse;
 import com.Wiinvent.Lotus.domain.checkin.service.CheckInService;
+import com.Wiinvent.Lotus.core.ratelimit.RateLimit;
+import com.Wiinvent.Lotus.core.ratelimit.RateLimitType;
+import org.redisson.api.RateIntervalUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +29,7 @@ public class CheckInController {
     }
 
     @PostMapping
+    @RateLimit(rate = 10, rateInterval = 1, rateIntervalUnit = RateIntervalUnit.MINUTES, type = RateLimitType.USER)
     public ResponseEntity<ApiResponse<CheckInResponse>> checkIn() {
         CheckInResponse response = checkInService.checkIn(SecurityUtils.getCurrentUserId());
         return ResponseEntity.ok(ApiResponse.success(response));

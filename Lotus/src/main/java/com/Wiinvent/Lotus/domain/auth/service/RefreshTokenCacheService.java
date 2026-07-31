@@ -7,7 +7,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +36,7 @@ public class RefreshTokenCacheService {
         if (dto != null) {
             dto.setRevoked(true);
             if (remainingTtlMs > 0) {
-                bucket.set(dto, java.time.Duration.ofMillis(remainingTtlMs));
+                bucket.set(dto, Duration.ofMillis(remainingTtlMs));
             } else {
                 bucket.delete();
             }

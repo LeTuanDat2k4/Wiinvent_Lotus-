@@ -6,6 +6,9 @@ import com.Wiinvent.Lotus.core.security.SecurityUtils;
 import com.Wiinvent.Lotus.domain.point.dto.DeductPointRequest;
 import com.Wiinvent.Lotus.domain.point.dto.PointTransactionResponse;
 import com.Wiinvent.Lotus.domain.point.service.PointService;
+import com.Wiinvent.Lotus.core.ratelimit.RateLimit;
+import com.Wiinvent.Lotus.core.ratelimit.RateLimitType;
+import org.redisson.api.RateIntervalUnit;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +36,7 @@ public class PointController {
     }
 
     @PostMapping("/deduct")
+    @RateLimit(rate = 10, rateInterval = 1, rateIntervalUnit = RateIntervalUnit.MINUTES, type = RateLimitType.USER)
     public ResponseEntity<ApiResponse<PointTransactionResponse>> deductPoints(
             @Valid @RequestBody DeductPointRequest request) {
         PointTransactionResponse response = pointService.deductPoints(request);
