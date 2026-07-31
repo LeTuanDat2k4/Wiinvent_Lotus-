@@ -6,6 +6,7 @@ import com.Wiinvent.Lotus.core.security.JwtTokenProvider;
 import com.Wiinvent.Lotus.core.security.UserPrincipal;
 import com.Wiinvent.Lotus.core.util.TokenHashUtil;
 import com.Wiinvent.Lotus.domain.auth.dto.LoginRequest;
+import com.Wiinvent.Lotus.domain.auth.dto.RefreshTokenCacheDto;
 import com.Wiinvent.Lotus.domain.auth.dto.RefreshTokenRequest;
 import com.Wiinvent.Lotus.domain.auth.dto.TokenResponse;
 import com.Wiinvent.Lotus.domain.auth.entity.RefreshToken;
@@ -26,6 +27,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenCacheService refreshTokenCacheService;
     private final UserRepository userRepository;
     private final LotusProperties lotusProperties;
 
@@ -45,15 +47,33 @@ public class AuthService {
         }
 
         String tokenHash = TokenHashUtil.hash(request.getRefreshToken());
-        RefreshToken storedToken = refreshTokenRepository.findByTokenHashAndRevokedFalse(tokenHash)
-                .orElseThrow(() -> new UnauthorizedException("Refresh token không hợp lệ hoặc đã bị thu hồi."));
+        var cacheOpt = refreshTokenCacheService.getToken(tokenHash);
 
-        if (storedToken.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new UnauthorizedException("Refresh token đã hết hạn.");
+        if (cacheOpt.isPresent()) {
+            RefreshTokenCacheDto cacheDto = cacheOpt.get();
+            if (Boolean.TRUE.equals(cacheDto.getRevoked())) {
+                throw new UnauthorizedException("Refresh token không hợp lệ hoặc đã bị thu hồi.");
+            }
+            if (cacheDto.getExpiresAt().isBefore(LocalDateTime.now())) {
+                throw new UnauthorizedException("Refresh token đã hết hạn.");
+            }
+        } else {
+            RefreshToken storedToken = refreshTokenRepository.findByTokenHashAndRevokedFalse(tokenHash)
+                    .orElseThrow(() -> new UnauthorizedException("Refresh token không hợp lệ hoặc đã bị thu hồi."));
+
+            if (storedToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+                throw new UnauthorizedException("Refresh token đã hết hạn.");
+            }
         }
 
-        storedToken.setRevoked(true);
-        refreshTokenRepository.save(storedToken);
+        RefreshToken storedToken = refreshTokenRepository.findByTokenHashAndRevokedFalse(tokenHash)
+                .orElse(null);
+        if (storedToken != null) {
+            storedToken.setRevoked(true);
+            refreshTokenRepository.save(storedToken);
+        }
+
+        refreshTokenCacheService.deleteToken(tokenHash);
 
         Long userId = Long.parseLong(claims.getSubject());
         UserPrincipal principal = userRepository.findById(userId)
@@ -67,14 +87,24 @@ public class AuthService {
         String accessToken = jwtTokenProvider.generateAccessToken(principal);
         String refreshToken = jwtTokenProvider.generateRefreshToken(principal);
 
+        LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(
+                lotusProperties.getJwt().getRefreshTokenExpirationMs() / 1000);
+
         RefreshToken entity = RefreshToken.builder()
                 .userId(principal.getId())
                 .tokenHash(TokenHashUtil.hash(refreshToken))
-                .expiresAt(LocalDateTime.now().plusSeconds(
-                        lotusProperties.getJwt().getRefreshTokenExpirationMs() / 1000))
+                .expiresAt(expiresAt)
                 .revoked(false)
                 .build();
         refreshTokenRepository.save(entity);
+
+        RefreshTokenCacheDto cacheDto = RefreshTokenCacheDto.builder()
+                .userId(principal.getId())
+                .tokenHash(entity.getTokenHash())
+                .expiresAt(expiresAt)
+                .revoked(false)
+                .build();
+        refreshTokenCacheService.saveToken(cacheDto, lotusProperties.getJwt().getRefreshTokenExpirationMs());
 
         return TokenResponse.builder()
                 .accessToken(accessToken)
