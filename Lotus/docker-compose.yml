@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: lotus-postgres
+    environment:
+      POSTGRES_DB: lotus
+      POSTGRES_USER: lotus
+      POSTGRES_PASSWORD: lotus
+    ports:
+      - "5432:5432"
+    volumes:
+      - lotus_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lotus -d lotus"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: lotus-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - lotus_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  lotus_pg_data:
+  lotus_redis_data:

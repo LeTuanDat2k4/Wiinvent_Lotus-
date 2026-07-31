@@ -1,0 +1,279 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-users
+      author: lotus
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: phone
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: display_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: password
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: avatar_url
+                  type: VARCHAR(500)
+              - column:
+                  name: lotus_balance
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+        - createIndex:
+            indexName: idx_users_phone
+            tableName: users
+            columns:
+              - column:
+                  name: phone
+
+  - changeSet:
+      id: 001-create-reward-config
+      author: lotus
+      changes:
+        - createTable:
+            tableName: reward_config
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: day_number
+                  type: INT
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: reward_point
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+
+  - changeSet:
+      id: 001-create-check-in-records
+      author: lotus
+      changes:
+        - createTable:
+            tableName: check_in_records
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_check_in_user
+                    references: users(id)
+              - column:
+                  name: check_in_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: day_number_in_month
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reward_point
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+        - addUniqueConstraint:
+            tableName: check_in_records
+            columnNames: user_id, check_in_date
+            constraintName: uk_check_in_user_date
+        - createIndex:
+            indexName: idx_check_in_user_date
+            tableName: check_in_records
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: check_in_date
+
+  - changeSet:
+      id: 001-create-point-transactions
+      author: lotus
+      changes:
+        - createTable:
+            tableName: point_transactions
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_point_tx_user
+                    references: users(id)
+              - column:
+                  name: type
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: balance_after
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reason
+                  type: VARCHAR(500)
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+        - createIndex:
+            indexName: idx_point_tx_user_created
+            tableName: point_transactions
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: created_at
+
+  - changeSet:
+      id: 001-create-refresh-tokens
+      author: lotus
+      changes:
+        - createTable:
+            tableName: refresh_tokens
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_refresh_token_user
+                    references: users(id)
+              - column:
+                  name: token_hash
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: revoked
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+        - createIndex:
+            indexName: idx_refresh_token_user
+            tableName: refresh_tokens
+            columns:
+              - column:
+                  name: user_id

@@ -1,0 +1,54 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-seed-reward-config
+      author: lotus
+      changes:
+        - insert:
+            tableName: reward_config
+            columns:
+              - column: { name: day_number, valueNumeric: 1 }
+              - column: { name: reward_point, valueNumeric: 1 }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, valueComputed: CURRENT_TIMESTAMP }
+        - insert:
+            tableName: reward_config
+            columns:
+              - column: { name: day_number, valueNumeric: 2 }
+              - column: { name: reward_point, valueNumeric: 2 }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, valueComputed: CURRENT_TIMESTAMP }
+        - insert:
+            tableName: reward_config
+            columns:
+              - column: { name: day_number, valueNumeric: 3 }
+              - column: { name: reward_point, valueNumeric: 3 }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, valueComputed: CURRENT_TIMESTAMP }
+        - insert:
+            tableName: reward_config
+            columns:
+              - column: { name: day_number, valueNumeric: 4 }
+              - column: { name: reward_point, valueNumeric: 5 }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, valueComputed: CURRENT_TIMESTAMP }
+        - insert:
+            tableName: reward_config
+            columns:
+              - column: { name: day_number, valueNumeric: 5 }
+              - column: { name: reward_point, valueNumeric: 8 }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, valueComputed: CURRENT_TIMESTAMP }
+        - insert:
+            tableName: reward_config
+            columns:
+              - column: { name: day_number, valueNumeric: 6 }
+              - column: { name: reward_point, valueNumeric: 13 }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, valueComputed: CURRENT_TIMESTAMP }
+        - insert:
+            tableName: reward_config
+            columns:
+              - column: { name: day_number, valueNumeric: 7 }
+              - column: { name: reward_point, valueNumeric: 21 }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, valueComputed: CURRENT_TIMESTAMP }

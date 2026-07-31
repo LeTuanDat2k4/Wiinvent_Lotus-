@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:lotus_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+  liquibase:
+    enabled: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+lotus:
+  jwt:
+    secret: test-secret-key-must-be-at-least-256-bits-long-for-hs256-algo
+    access-token-expiration-ms: 900000
+    refresh-token-expiration-ms: 604800000
+  internal-api-key: test-internal-key
+  admin:
+    phone: "0900000000"
+    display-name: Admin
+    default-password: admin123
