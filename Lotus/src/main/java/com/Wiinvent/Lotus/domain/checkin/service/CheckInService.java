@@ -11,7 +11,7 @@ import com.Wiinvent.Lotus.domain.checkin.entity.CheckInRecord;
 import com.Wiinvent.Lotus.domain.checkin.repository.CheckInRecordRepository;
 import com.Wiinvent.Lotus.domain.point.service.PointService;
 import com.Wiinvent.Lotus.domain.reward.entity.RewardConfig;
-import com.Wiinvent.Lotus.domain.reward.repository.RewardConfigRepository;
+import com.Wiinvent.Lotus.domain.reward.service.RewardService;
 import com.Wiinvent.Lotus.domain.user.entity.User;
 import com.Wiinvent.Lotus.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,8 @@ public class CheckInService {
     private static final String CHECK_IN_LOCK_PREFIX = "checkin:lock:";
 
     private final CheckInRecordRepository checkInRecordRepository;
-    private final RewardConfigRepository rewardConfigRepository;
+    private final RewardService rewardService;
+    private final CheckInCacheService checkInCacheService;
     private final UserService userService;
     private final PointService pointService;
     private final RedissonClient redissonClient;
@@ -47,7 +48,7 @@ public class CheckInService {
         LocalDate today = now.toLocalDate();
         YearMonth currentMonth = YearMonth.from(today);
 
-        List<RewardConfig> rewardConfigs = rewardConfigRepository.findAllByOrderByDayNumberAsc();
+        List<RewardConfig> rewardConfigs = rewardService.getAllRewardConfigs();
         List<CheckInRecord> records = checkInRecordRepository.findByUserIdAndYearMonth(userId, currentMonth);
         Map<Integer, CheckInRecord> recordByDayNumber = records.stream()
                 .collect(Collectors.toMap(CheckInRecord::getDayNumberInMonth, Function.identity()));
@@ -60,8 +61,8 @@ public class CheckInService {
                         .build())
                 .toList();
 
-        int checkedInDays = records.size();
-        boolean checkedInToday = checkInRecordRepository.existsByUserIdAndCheckInDate(userId, today);
+        int checkedInDays = checkInCacheService.getCheckedInCountThisMonth(userId, currentMonth);
+        boolean checkedInToday = checkInCacheService.isCheckedInDate(userId, today);
         CheckInButtonState buttonState = resolveButtonState(now, checkedInToday, checkedInDays);
 
         return CheckInStatusResponse.builder()
@@ -82,11 +83,11 @@ public class CheckInService {
         if (!CheckInTimeWindow.isWithinCheckInWindow(now)) {
             throw new BusinessException(CheckInTimeWindow.TIME_WINDOW_MESSAGE);
         }
-        if (checkInRecordRepository.existsByUserIdAndCheckInDate(userId, today)) {
+        if (checkInCacheService.isCheckedInDate(userId, today)) {
             throw new BusinessException("Bạn đã điểm danh hôm nay.");
         }
 
-        long checkedInDays = checkInRecordRepository.countByUserIdAndYearMonth(userId, currentMonth);
+        long checkedInDays = checkInCacheService.getCheckedInCountThisMonth(userId, currentMonth);
         if (checkedInDays >= CheckInTimeWindow.MAX_CHECK_INS_PER_MONTH) {
             throw new BusinessException("Bạn đã điểm danh đủ 7 ngày trong tháng này.");
         }
@@ -100,12 +101,12 @@ public class CheckInService {
                 throw new BusinessException("Hệ thống đang xử lý yêu cầu điểm danh. Vui lòng thử lại.");
             }
 
-            if (checkInRecordRepository.existsByUserIdAndCheckInDate(userId, today)) {
+            if (checkInCacheService.isCheckedInDate(userId, today)) {
                 throw new BusinessException("Bạn đã điểm danh hôm nay.");
             }
 
             int dayNumberInMonth = (int) checkedInDays + 1;
-            RewardConfig rewardConfig = rewardConfigRepository.findByDayNumber(dayNumberInMonth)
+            RewardConfig rewardConfig = rewardService.getRewardConfigByDay(dayNumberInMonth)
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "RewardConfig", "dayNumber", dayNumberInMonth));
 
@@ -120,6 +121,8 @@ public class CheckInService {
                     .rewardPoint(rewardConfig.getRewardPoint())
                     .build();
             checkInRecordRepository.save(record);
+
+            checkInCacheService.addCheckInDate(userId, today);
 
             pointService.recordEarn(
                     userId,
