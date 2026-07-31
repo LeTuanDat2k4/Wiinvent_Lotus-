@@ -130,6 +130,8 @@ public class CheckInService {
                     newBalance,
                     "Điểm danh ngày " + dayNumberInMonth);
 
+            userService.evictUserProfileCache(userId);
+
             return CheckInResponse.builder()
                     .checkInDate(today)
                     .dayNumberInMonth(dayNumberInMonth)

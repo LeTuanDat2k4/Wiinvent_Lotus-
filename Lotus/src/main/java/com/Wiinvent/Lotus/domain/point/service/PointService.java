@@ -46,7 +46,9 @@ public class PointService {
                 .reason(request.getReason())
                 .build();
 
-        return toResponse(pointTransactionRepository.save(transaction));
+        PointTransactionResponse response = toResponse(pointTransactionRepository.save(transaction));
+        userService.evictUserProfileCache(user.getId());
+        return response;
     }
 
     @Transactional
