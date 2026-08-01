@@ -2,7 +2,7 @@ spring:
   application:
     name: Lotus
   datasource:
-    url: jdbc:postgresql://localhost:5432/lotus
+    url: jdbc:postgresql://localhost:5435/lotus
     username: lotus
     password: lotus
     driver-class-name: org.postgresql.Driver

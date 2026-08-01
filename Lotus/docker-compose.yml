@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: lotus
       POSTGRES_PASSWORD: lotus
     ports:
-      - "5432:5432"
+      - "5435:5432"
     volumes:
       - lotus_pg_data:/var/lib/postgresql/data
     healthcheck:
