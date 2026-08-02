@@ -2,10 +2,9 @@ package com.Wiinvent.Lotus.core.controller;
 
 import com.Wiinvent.Lotus.core.dto.ApiResponse;
 import com.Wiinvent.Lotus.core.dto.PageResponse;
+import com.Wiinvent.Lotus.core.dto.PagingRequest;
 import com.Wiinvent.Lotus.core.entity.BaseEntity;
 import com.Wiinvent.Lotus.core.service.BaseService;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -38,8 +37,8 @@ public abstract class BaseController<T extends BaseEntity<ID>, ID extends Serial
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<PageResponse<ResDTO>>> findAll(@PageableDefault(size = 20) Pageable pageable) {
-        PageResponse<ResDTO> page = service.findAll(pageable);
+    public ResponseEntity<ApiResponse<PageResponse<ResDTO>>> findAll(PagingRequest pagingRequest) {
+        PageResponse<ResDTO> page = service.findAll(pagingRequest.getPageable());
         return ResponseEntity.ok(ApiResponse.success(page));
     }
 

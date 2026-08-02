@@ -1,6 +1,8 @@
 package com.Wiinvent.Lotus.core.dto;
 
 import lombok.Data;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
@@ -27,4 +29,7 @@ public class PagingRequest {
         );
     }
 
+    public Pageable getPageable() {
+        return PageRequest.of(page, size, toSort());
+    }
 }
